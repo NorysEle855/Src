@@ -37,7 +37,7 @@ int main(void)
 	
   while (1)
   {
-    count++;
+ 
   }
 }
 
@@ -154,7 +154,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0); // Prioridad 0 (la más alta)
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 }
 
 void Error_Handler(void)
@@ -162,6 +163,26 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+  }
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  // Variable estática para recordar cuándo fue la última vez que se presionó el botón
+  static uint32_t ultimo_tiempo_presionado = 0;
+  
+  // Obtener el tiempo actual en milisegundos desde que encendió la placa
+  uint32_t tiempo_actual = HAL_GetTick(); 
+
+  if (GPIO_Pin == GPIO_PIN_2)
+  {
+    // Solo permitimos sumar si han pasado más de 200 ms desde el último registro
+    if ((tiempo_actual - ultimo_tiempo_presionado) > 200)
+    {
+      count++; 
+      ultimo_tiempo_presionado = tiempo_actual; // Actualizamos el tiempo
+    }
+	
   }
 }
 #ifdef USE_FULL_ASSERT
