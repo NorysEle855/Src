@@ -10,6 +10,10 @@ static void MX_ADC1_Init(void);
 volatile int count = 0;
 volatile uint32_t valor_adcA0 = 0;
 volatile int porcentaje_adc = 0;
+volatile uint32_t valor_adcA1 = 0;
+volatile int porcentaje_control = 0;
+
+
 // Declaracion de funciones
 void casoA(void);
 void casoB(void);
@@ -24,6 +28,48 @@ int main(void)
   MX_ADC1_Init();
 
   while (1)
+  {
+    ADC_ChannelConfTypeDef sConfig = {0};
+    float temp_porcentaje;
+
+    // --- LEER CANAL 0 (NIVEL en PA0) ---
+    sConfig.Channel = ADC_CHANNEL_0;
+    sConfig.Rank = 1;
+    sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+    HAL_ADC_ConfigChannel(&hadc1, &sConfig);
+
+    HAL_ADC_Start(&hadc1);
+    if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
+      valor_adcA0 = HAL_ADC_GetValue(&hadc1);
+      temp_porcentaje = (0.0259f * valor_adcA0) - 5.8717f;
+      if (temp_porcentaje < 0.0f) temp_porcentaje = 0.0f;
+      if (temp_porcentaje > 100.0f) temp_porcentaje = 100.0f;
+      porcentaje_adc = (int)temp_porcentaje;
+    }
+    HAL_ADC_Stop(&hadc1);
+
+    // --- LEER CANAL 1 (CONTROL en PA1) ---
+    sConfig.Channel = ADC_CHANNEL_1; 
+    HAL_ADC_ConfigChannel(&hadc1, &sConfig);
+
+    HAL_ADC_Start(&hadc1);
+    if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
+      valor_adcA1 = HAL_ADC_GetValue(&hadc1);
+      temp_porcentaje = (0.0259f * valor_adcA1) - 4.8717f;
+      if (temp_porcentaje < 0.0f) temp_porcentaje = 0.0f;
+      if (temp_porcentaje > 100.0f) temp_porcentaje = 100.0f;
+      porcentaje_control = (int)temp_porcentaje;
+    }
+    HAL_ADC_Stop(&hadc1);
+
+    // --- LÓGICA DE ESTADOS ---
+    if (count == 1) casoA();
+    else if (count == 2) casoB();
+    else if (count == 3) casoC();
+    else count = 1;
+
+    HAL_Delay(10);
+  }
   {
     HAL_ADC_Start(&hadc1);
     
@@ -236,7 +282,70 @@ void casoA(void)
 
 void casoB(void)
 {
-  // Aquí irá tu código para el Caso B
+  // 1. SEMÁFORO DE NIVEL (Igual que en Modo A)
+  // Apagamos primero
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_10 | 
+                           GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8 | GPIO_PIN_9, GPIO_PIN_RESET);
+
+  // Encendemos según el Nivel
+  if (porcentaje_adc >= 10) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0,  GPIO_PIN_SET);
+  if (porcentaje_adc >= 20) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1,  GPIO_PIN_SET);
+  if (porcentaje_adc >= 30) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2,  GPIO_PIN_SET);
+  if (porcentaje_adc >= 40) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
+  if (porcentaje_adc >= 50) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+  if (porcentaje_adc >= 60) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_SET);
+  if (porcentaje_adc >= 70) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+  if (porcentaje_adc >= 80) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_SET);
+  if (porcentaje_adc >= 90) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8,  GPIO_PIN_SET);
+  if (porcentaje_adc >= 100) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+
+
+  // 2. SEMÁFORO DE CONTROL (10 LEDs Blancos)
+  // Apagamos primero
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10 | GPIO_PIN_15, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | 
+                           GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+
+  // Encendemos según el Control
+  if (porcentaje_control >= 10) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+  if (porcentaje_control >= 20) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
+  if (porcentaje_control >= 30) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3,  GPIO_PIN_SET);
+  if (porcentaje_control >= 40) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4,  GPIO_PIN_SET);
+  if (porcentaje_control >= 50) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5,  GPIO_PIN_SET);
+  if (porcentaje_control >= 60) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6,  GPIO_PIN_SET);
+  if (porcentaje_control >= 70) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7,  GPIO_PIN_SET);
+  if (porcentaje_control >= 80) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8,  GPIO_PIN_SET);
+  if (porcentaje_control >= 90) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9,  GPIO_PIN_SET);
+  if (porcentaje_control >= 100) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+
+
+  // 3. LED DE ALARMA (PA3) CON CICLO PROPORCIONAL
+  if (porcentaje_adc > porcentaje_control) 
+  {
+    int diferencia = porcentaje_adc - porcentaje_control;
+    
+    // El ciclo total es 2000 ms (2 segundos).
+    // Si la diferencia es 100%, el tiempo encendido es 2000ms. Si es 50%, es 1000ms.
+    // Fórmula: tiempo_encendido = (diferencia * 2000) / 100 => diferencia * 20
+    uint32_t tiempo_encendido_ms = diferencia * 20; 
+    
+    // Obtenemos el tiempo actual de la placa y lo dividimos en bloques de 2000ms
+    uint32_t tiempo_dentro_del_ciclo = HAL_GetTick() % 2000; 
+
+    // Si estamos dentro del tiempo de encendido, prendemos. Si nos pasamos, apagamos.
+    if (tiempo_dentro_del_ciclo < tiempo_encendido_ms) {
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+    } else {
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+    }
+  } 
+  else 
+  {
+    // Si Nivel NO supera a Control, la alarma permanece apagada
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+  }
 }
 
 void casoC(void)
