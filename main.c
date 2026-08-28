@@ -1,36 +1,15 @@
-/* USER CODE BEGIN Header */
-/**
- ******************************************************************************
- * @file           : main.c
- * @brief          : Main program body
- ******************************************************************************
- * @attention
- *
- * Copyright (c) 2026 STMicroelectronics.
- * All rights reserved.
- *
- * This software is licensed under terms that can be found in the LICENSE file
- * in the root directory of this software component.
- * If no LICENSE file comes with this software, it is provided AS-IS.
- *
- ******************************************************************************
- */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
 #include "main.h"
-volatile int count = 0;
-
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
-
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 
+//Declaracion de variables
+volatile int count = 0;
 
-
-
+//Declaracion de funciones
 void casoA(void);
 void casoB(void);
 void casoC(void);
@@ -195,7 +174,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         casoA();  
       }
 
-      ultimo_tiempo_presionado = tiempo_actual; // Actualizamos el tiempo
+      ultimo_tiempo_presionado = tiempo_actual;
     }
   }
 }
