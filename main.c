@@ -182,7 +182,19 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
       count++; 
       ultimo_tiempo_presionado = tiempo_actual; // Actualizamos el tiempo
     }
-	
+		if(count == 1){
+			
+		}
+		else if(count == 2){
+			
+		}
+		else if(count == 3){
+			
+		}
+		else {
+			count=0;
+		}
+		
   }
 }
 #ifdef USE_FULL_ASSERT
