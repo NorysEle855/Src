@@ -350,7 +350,19 @@ void casoB(void)
 
 void casoC(void)
 {
-  // Aquí irá tu código para el Caso C
+  // 1. Apagar Semáforo Principal (Nivel - 10 LEDs)
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_10 | 
+                           GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8 | GPIO_PIN_9, GPIO_PIN_RESET);
+
+  // 2. Apagar Semáforo de Control (Blancos - 10 LEDs)
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10 | GPIO_PIN_15, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | 
+                           GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+
+  // 3. Apagar LED de Alarma
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
 }
 
 #ifdef USE_FULL_ASSERT
