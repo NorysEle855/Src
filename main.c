@@ -26,28 +26,36 @@ int main(void)
   while (1)
   {
     HAL_ADC_Start(&hadc1);
-
+    
     if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK)
     {
       valor_adcA0 = HAL_ADC_GetValue(&hadc1);
-
       float temp_porcentaje = (0.0259f * valor_adcA0) - 5.8717f;
 
-      if (temp_porcentaje < 0.0f)
-      {
-        temp_porcentaje = 0.0f;
-      }
-      else if (temp_porcentaje > 100.0f)
-      {
-        temp_porcentaje = 100.0f;
-      }
+      if (temp_porcentaje < 0.0f) temp_porcentaje = 0.0f;
+      else if (temp_porcentaje > 100.0f) temp_porcentaje = 100.0f;
 
       porcentaje_adc = (int)temp_porcentaje;
     }
-
     HAL_ADC_Stop(&hadc1);
-
-    HAL_Delay(10);
+    // La evaluación de casos va AQUÍ ADENTRO, así solo se ejecuta una vez por clic
+      if (count == 1)
+      {
+        casoA();
+      }
+      else if (count == 2)
+      {
+        casoB();
+      }
+      else if (count == 3)
+      {
+        casoC();
+      }
+      else
+      {
+        count = 1;
+        casoA();
+      }
   }
 }
 
@@ -178,24 +186,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     {
       count++;
 
-      // La evaluación de casos va AQUÍ ADENTRO, así solo se ejecuta una vez por clic
-      if (count == 1)
-      {
-        casoA();
-      }
-      else if (count == 2)
-      {
-        casoB();
-      }
-      else if (count == 3)
-      {
-        casoC();
-      }
-      else
-      {
-        count = 1;
-        casoA();
-      }
+      
 
       ultimo_tiempo_presionado = tiempo_actual;
     }
@@ -204,7 +195,43 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 void casoA(void)
 {
-  // Aquí irá tu código para el Caso A
+  // 1. APAGAR SISTEMAS INACTIVOS (Variables de control y Alarma)
+  // Apagar LED de Alarma (PA3)
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+  
+  // Apagar LEDs Blancos (Puerto A: PA10, PA15)
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10 | GPIO_PIN_15, GPIO_PIN_RESET);
+  
+  // Apagar LEDs Blancos (Puerto B: PB3, PB4, PB5, PB6, PB7, PB8, PB9)
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | 
+                           GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9, GPIO_PIN_RESET);
+                           
+  // Apagar LED Blanco (Puerto C: PC13)
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+
+
+  // 2. APAGAR SEMÁFORO PRINCIPAL PARA REFRESCAR EL ESTADO
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_10 | 
+                           GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8 | GPIO_PIN_9, GPIO_PIN_RESET);
+
+
+  // 3. ENCENDER SECUENCIALMENTE SEGÚN EL PORCENTAJE (Modo Barra)
+  // Leds Rojos (0% - 40%)
+  if (porcentaje_adc >= 10) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0,  GPIO_PIN_SET);
+  if (porcentaje_adc >= 20) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1,  GPIO_PIN_SET);
+  if (porcentaje_adc >= 30) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2,  GPIO_PIN_SET);
+  if (porcentaje_adc >= 40) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
+
+  // Leds Amarillos (41% - 70%)
+  if (porcentaje_adc >= 50) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+  if (porcentaje_adc >= 60) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_SET);
+  if (porcentaje_adc >= 70) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+
+  // Leds Verdes (71% - 100%)
+  if (porcentaje_adc >= 80) HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_SET);
+  if (porcentaje_adc >= 90) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8,  GPIO_PIN_SET);
+  if (porcentaje_adc >= 100) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 }
 
 void casoB(void)
