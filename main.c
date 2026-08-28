@@ -6,14 +6,13 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 
-//Declaracion de variables
+// Declaracion de variables
 volatile int count = 0;
-
-//Declaracion de funciones
+volatile uint32_t valor_adcA0 = 0;
+// Declaracion de funciones
 void casoA(void);
 void casoB(void);
 void casoC(void);
-
 
 int main(void)
 {
@@ -23,8 +22,24 @@ int main(void)
   MX_DMA_Init();
   MX_ADC1_Init();
 
-  while (1)
+ while (1)
   {
+    // 1. Dar la orden de iniciar la conversión ADC
+    // 1. Dar la orden de iniciar la conversión ADC
+    HAL_ADC_Start(&hadc1);
+    
+    // 2. Esperar a que la conversión termine (con un timeout máximo de 10 ms)
+    if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK)
+    {
+      // 3. Leer el valor numérico (de 0 a 4095) y guardarlo en la variable
+      valor_adcA0 = HAL_ADC_GetValue(&hadc1);
+    }
+    
+    // 4. Detener el ADC (buena práctica cuando no es continuo)
+    HAL_ADC_Stop(&hadc1);
+
+    // Opcional: Un pequeño delay para que la lectura sea estable en el scope
+    HAL_Delay(10);
   }
 }
 
@@ -140,6 +155,8 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+		
+    
   }
 }
 
@@ -171,7 +188,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
       else
       {
         count = 1;
-        casoA();  
+        casoA();
       }
 
       ultimo_tiempo_presionado = tiempo_actual;
