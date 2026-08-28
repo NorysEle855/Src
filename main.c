@@ -9,6 +9,7 @@ static void MX_ADC1_Init(void);
 // Declaracion de variables
 volatile int count = 0;
 volatile uint32_t valor_adcA0 = 0;
+volatile int porcentaje_adc = 0;
 // Declaracion de funciones
 void casoA(void);
 void casoB(void);
@@ -22,23 +23,30 @@ int main(void)
   MX_DMA_Init();
   MX_ADC1_Init();
 
- while (1)
+  while (1)
   {
-    // 1. Dar la orden de iniciar la conversión ADC
-    // 1. Dar la orden de iniciar la conversión ADC
     HAL_ADC_Start(&hadc1);
-    
-    // 2. Esperar a que la conversión termine (con un timeout máximo de 10 ms)
+
     if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK)
     {
-      // 3. Leer el valor numérico (de 0 a 4095) y guardarlo en la variable
       valor_adcA0 = HAL_ADC_GetValue(&hadc1);
+
+      float temp_porcentaje = (0.0259f * valor_adcA0) - 5.8717f;
+
+      if (temp_porcentaje < 0.0f)
+      {
+        temp_porcentaje = 0.0f;
+      }
+      else if (temp_porcentaje > 100.0f)
+      {
+        temp_porcentaje = 100.0f;
+      }
+
+      porcentaje_adc = (int)temp_porcentaje;
     }
-    
-    // 4. Detener el ADC (buena práctica cuando no es continuo)
+
     HAL_ADC_Stop(&hadc1);
 
-    // Opcional: Un pequeño delay para que la lectura sea estable en el scope
     HAL_Delay(10);
   }
 }
@@ -155,8 +163,6 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
-		
-    
   }
 }
 
