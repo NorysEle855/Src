@@ -34,12 +34,7 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
-
-  /* Declara tu variable count antes del bucle infinito */
-
-
 	
-
   while (1)
   {
     count++;
